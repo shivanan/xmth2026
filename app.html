@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Treasure Hunt</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .code-entry-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .code-input-container {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .code-input {
+            width: 45px;
+            height: 55px;
+            font-size: 24px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            font-weight: 600;
+        }
+        
+        .code-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            transform: scale(1.05);
+        }
+        
+        .code-input.filled {
+            border-color: #667eea;
+            background: white;
+        }
+        
+        .unlock-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .unlock-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .unlock-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .error-message {
+            text-align: center;
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 10px;
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        .puzzle-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+            overflow-y: auto;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .puzzle-container {
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .dismiss-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .dismiss-button:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: scale(1.1);
+        }
+        
+        .clue-display {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            margin: 20px 0;
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        .clue-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .clue-text {
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        
+        .completed-codes {
+            margin-top: 20px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+        
+        .math-puzzle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+        }
+        
+        .word-puzzle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+        }
+        
+        .riddle-puzzle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+        }
+        
+        .puzzle-title {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .puzzle-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .puzzle-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            margin-top: 20px;
+        }
+        
+        .puzzle-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .puzzle-input:focus {
+            outline: none;
+            border-color: white;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .puzzle-submit {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            border: 2px solid white;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .puzzle-submit:hover {
+            background: white;
+            color: #667eea;
+        }
+        
+        .puzzle-feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .puzzle-feedback.correct {
+            background: rgba(46, 213, 115, 0.3);
+            border: 2px solid #2ed573;
+        }
+        
+        .puzzle-feedback.incorrect {
+            background: rgba(255, 71, 87, 0.3);
+            border: 2px solid #ff4757;
+        }
+        
+        /* Image Puzzle Styles */
+        .image-puzzle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            padding: 20px;
+        }
+        
+        .image-puzzle-content {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        
+        .image-puzzle-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .image-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        
+        .puzzle-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .option-button {
+            padding: 15px 20px;
+            background: white;
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #333;
+        }
+        
+        .option-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .option-button.incorrect {
+            background: #ffebee;
+            border-color: #ef5350;
+            color: #ef5350;
+            animation: shake 0.5s ease;
+        }
+        
+        .option-button.correct {
+            background: #e8f5e9;
+            border-color: #4caf50;
+            color: #4caf50;
+        }
+        
+        .option-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .image-feedback {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+        
+        .image-feedback.success {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .attempts-counter {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .image-progress {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="module">
+        import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18';
+        import ReactDOM from 'https://esm.sh/react-dom@18/client';
+
+        // Image Puzzle Component - Reusable template
+        const ImagePuzzle = ({ 
+            puzzleData = [], // Array of {image, options, correctAnswer}
+            question = "What does this image represent?",
+            onSolve 
+        }) => {
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [incorrectAttempts, setIncorrectAttempts] = useState({});
+            const [solved, setSolved] = useState(false);
+            const [totalAttempts, setTotalAttempts] = useState(0);
+            
+            // Current puzzle item
+            const currentPuzzle = puzzleData[currentIndex];
+            
+            if (!currentPuzzle) {
+                return React.createElement('div', { className: 'image-puzzle' },
+                    React.createElement('div', { className: 'image-puzzle-content' },
+                        React.createElement('p', null, 'No puzzle data provided')
+                    )
+                );
+            }
+            
+            const handleOptionClick = (option) => {
+                if (solved) return;
+                
+                setTotalAttempts(prev => prev + 1);
+                
+                if (option === currentPuzzle.correctAnswer) {
+                    setSolved(true);
+                    setTimeout(() => onSolve(), 2000);
+                } else {
+                    // Track incorrect attempts for this specific puzzle
+                    const puzzleKey = `puzzle_${currentIndex}`;
+                    setIncorrectAttempts(prev => ({
+                        ...prev,
+                        [puzzleKey]: [...(prev[puzzleKey] || []), option]
+                    }));
+                    
+                    // Move to next image after a delay
+                    setTimeout(() => {
+                        setCurrentIndex((prev) => (prev + 1) % puzzleData.length);
+                    }, 1500);
+                }
+            };
+            
+            // Get incorrect attempts for current puzzle
+            const currentIncorrect = incorrectAttempts[`puzzle_${currentIndex}`] || [];
+            
+            return React.createElement('div', { className: 'image-puzzle' },
+                React.createElement('div', { className: 'image-puzzle-content' },
+                    React.createElement('h2', { className: 'image-puzzle-title' }, question),
+                    React.createElement('div', { className: 'image-progress' },
+                        `Image ${currentIndex + 1} of ${puzzleData.length}`
+                    ),
+                    React.createElement('div', { className: 'image-container' },
+                        React.createElement('img', { 
+                            className: 'puzzle-image',
+                            src: currentPuzzle.image,
+                            alt: 'Mystery image'
+                        })
+                    ),
+                    React.createElement('div', { className: 'options-grid' },
+                        currentPuzzle.options.map(option => 
+                            React.createElement('button', {
+                                key: option,
+                                className: `option-button ${
+                                    currentIncorrect.includes(option) ? 'incorrect' : ''
+                                } ${
+                                    solved && option === currentPuzzle.correctAnswer ? 'correct' : ''
+                                }`,
+                                onClick: () => handleOptionClick(option),
+                                disabled: solved || currentIncorrect.includes(option)
+                            }, option)
+                        )
+                    ),
+                    solved && React.createElement('div', { className: 'image-feedback success' },
+                        '🎉 Correct! Well done!'
+                    ),
+                    totalAttempts > 0 && !solved && React.createElement('div', { className: 'attempts-counter' },
+                        `Total attempts: ${totalAttempts}`
+                    )
+                )
+            );
+        };
+
+        // Example Math Puzzle Component
+        const MathPuzzle = ({ onSolve }) => {
+            const [answer, setAnswer] = useState('');
+            const [feedback, setFeedback] = useState('');
+            
+            const checkAnswer = () => {
+                if (answer === '42') {
+                    setFeedback('correct');
+                    setTimeout(() => onSolve(), 1500);
+                } else {
+                    setFeedback('incorrect');
+                    setTimeout(() => setFeedback(''), 2000);
+                }
+            };
+            
+            return React.createElement('div', { className: 'math-puzzle' },
+                React.createElement('div', { className: 'puzzle-content' },
+                    React.createElement('h2', { className: 'puzzle-title' }, 'The Ancient Calculation'),
+                    React.createElement('p', { style: { fontSize: '20px', marginBottom: '20px', textAlign: 'center' } },
+                        'In the mystical sequence where:',
+                        React.createElement('br'),
+                        '7 × 3 = 21',
+                        React.createElement('br'),
+                        '21 × 2 = ?',
+                        React.createElement('br'),
+                        React.createElement('br'),
+                        'What is the answer to life, the universe, and everything?'
+                    ),
+                    React.createElement('input', {
+                        type: 'text',
+                        className: 'puzzle-input',
+                        placeholder: 'Enter your answer...',
+                        value: answer,
+                        onChange: (e) => setAnswer(e.target.value),
+                        onKeyPress: (e) => e.key === 'Enter' && checkAnswer()
+                    }),
+                    React.createElement('button', { className: 'puzzle-submit', onClick: checkAnswer }, 'Submit Answer'),
+                    feedback && React.createElement('div', { className: `puzzle-feedback ${feedback}` },
+                        feedback === 'correct' ? '✓ Correct! Well done!' : '✗ Try again!'
+                    )
+                )
+            );
+        };
+
+        // Example Word Puzzle Component
+        const WordPuzzle = ({ onSolve }) => {
+            const [answer, setAnswer] = useState('');
+            const [feedback, setFeedback] = useState('');
+            
+            const checkAnswer = () => {
+                if (answer.toLowerCase() === 'shadow') {
+                    setFeedback('correct');
+                    setTimeout(() => onSolve(), 1500);
+                } else {
+                    setFeedback('incorrect');
+                    setTimeout(() => setFeedback(''), 2000);
+                }
+            };
+            
+            return React.createElement('div', { className: 'word-puzzle' },
+                React.createElement('div', { className: 'puzzle-content' },
+                    React.createElement('h2', { className: 'puzzle-title' }, 'The Riddle of Darkness'),
+                    React.createElement('p', { style: { fontSize: '20px', marginBottom: '20px', textAlign: 'center', lineHeight: '1.8' } },
+                        'I follow you all day long,',
+                        React.createElement('br'),
+                        'But when night or rain comes,',
+                        React.createElement('br'),
+                        'I am gone.',
+                        React.createElement('br'),
+                        'I am dark when there\'s light,',
+                        React.createElement('br'),
+                        'But I disappear in the night.',
+                        React.createElement('br'),
+                        React.createElement('br'),
+                        'What am I?'
+                    ),
+                    React.createElement('input', {
+                        type: 'text',
+                        className: 'puzzle-input',
+                        placeholder: 'Enter your answer...',
+                        value: answer,
+                        onChange: (e) => setAnswer(e.target.value),
+                        onKeyPress: (e) => e.key === 'Enter' && checkAnswer()
+                    }),
+                    React.createElement('button', { className: 'puzzle-submit', onClick: checkAnswer }, 'Submit Answer'),
+                    feedback && React.createElement('div', { className: `puzzle-feedback ${feedback}` },
+                        feedback === 'correct' ? '✓ Brilliant deduction!' : '✗ Not quite right...'
+                    )
+                )
+            );
+        };
+
+        // Example Logic Puzzle Component  
+        const LogicPuzzle = ({ onSolve }) => {
+            const [answer, setAnswer] = useState('');
+            const [feedback, setFeedback] = useState('');
+            
+            const checkAnswer = () => {
+                if (answer.toLowerCase() === 'wednesday') {
+                    setFeedback('correct');
+                    setTimeout(() => onSolve(), 1500);
+                } else {
+                    setFeedback('incorrect');
+                    setTimeout(() => setFeedback(''), 2000);
+                }
+            };
+            
+            return React.createElement('div', { className: 'riddle-puzzle' },
+                React.createElement('div', { className: 'puzzle-content' },
+                    React.createElement('h2', { className: 'puzzle-title' }, 'The Day of Mystery'),
+                    React.createElement('p', { style: { fontSize: '20px', marginBottom: '20px', textAlign: 'center', lineHeight: '1.8' } },
+                        'If yesterday was Thursday\'s tomorrow',
+                        React.createElement('br'),
+                        'and tomorrow is Sunday\'s yesterday,',
+                        React.createElement('br'),
+                        'what day is today?'
+                    ),
+                    React.createElement('input', {
+                        type: 'text',
+                        className: 'puzzle-input',
+                        placeholder: 'Enter the day...',
+                        value: answer,
+                        onChange: (e) => setAnswer(e.target.value),
+                        onKeyPress: (e) => e.key === 'Enter' && checkAnswer()
+                    }),
+                    React.createElement('button', { className: 'puzzle-submit', onClick: checkAnswer }, 'Submit Answer'),
+                    feedback && React.createElement('div', { className: `puzzle-feedback ${feedback}` },
+                        feedback === 'correct' ? '✓ Excellent logic!' : '✗ Think about it again...'
+                    )
+                )
+            );
+        };
+
+        // Sample configured image puzzle with the new data structure
+        const AnimalIdentificationPuzzle = ({ onSolve }) => {
+            const puzzleData = [
+                {
+                    image: 'https://images.unsplash.com/photo-1549471013-5cdb9f3da0e2?w=600', // Tiger
+                    options: ['Tiger', 'Lion', 'Leopard', 'Cheetah'],
+                    correctAnswer: 'Tiger'
+                },
+                {
+                    image: 'https://images.unsplash.com/photo-1558788353-09f0822dfeb0?w=600', // Zebra
+                    options: ['Horse', 'Zebra', 'Donkey', 'Giraffe'],
+                    correctAnswer: 'Zebra'
+                },
+                {
+                    image: 'https://images.unsplash.com/photo-1535083783855-76ae62b2914e?w=600', // Penguin
+                    options: ['Seal', 'Penguin', 'Polar Bear', 'Walrus'],
+                    correctAnswer: 'Penguin'
+                }
+            ];
+            
+            return React.createElement(ImagePuzzle, {
+                puzzleData: puzzleData,
+                question: "What animal is this?",
+                onSolve: onSolve
+            });
+        };
+
+        const LandmarkIdentificationPuzzle = ({ onSolve }) => {
+            const puzzleData = [
+                {
+                    image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=600', // Taj Mahal
+                    options: ['Eiffel Tower', 'Taj Mahal', 'Big Ben', 'Colosseum'],
+                    correctAnswer: 'Taj Mahal'
+                },
+                {
+                    image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600', // Eiffel Tower
+                    options: ['Empire State', 'Eiffel Tower', 'CN Tower', 'Space Needle'],
+                    correctAnswer: 'Eiffel Tower'
+                },
+                {
+                    image: 'https://images.unsplash.com/photo-1523482580672-f109ba8cb9be?w=600', // Sydney Opera House
+                    options: ['Sydney Opera House', 'Lotus Temple', 'Burj Al Arab', 'Marina Bay'],
+                    correctAnswer: 'Sydney Opera House'
+                }
+            ];
+            
+            return React.createElement(ImagePuzzle, {
+                puzzleData: puzzleData,
+                question: "Which famous landmark is this?",
+                onSolve: onSolve
+            });
+        };
+
+        // Main App Component
+        const TreasureHuntApp = () => {
+            const [codeInputs, setCodeInputs] = useState(['', '', '', '', '', '']);
+            const [error, setError] = useState('');
+            const [activePuzzle, setActivePuzzle] = useState(null);
+            const [lastClue, setLastClue] = useState('');
+            const [solvedCodes, setSolvedCodes] = useState([]);
+            const inputRefs = useRef([]);
+
+            // Puzzle configuration with new image puzzles
+            const puzzles = {
+                '123456': {
+                    component: MathPuzzle,
+                    nextClue: "Excellent! Your next destination awaits at the old oak tree. Look for the marking that shows '789012'."
+                },
+                '789012': {
+                    component: WordPuzzle,
+                    nextClue: "Shadows lead the way! Head to the fountain and search for code '345678' beneath the waters."
+                },
+                '345678': {
+                    component: LogicPuzzle,
+                    nextClue: "Time is of the essence! Check the visitor center for code '111222'."
+                },
+                '111222': {
+                    component: AnimalIdentificationPuzzle,
+                    nextClue: "Great observation skills! The wildlife exhibit holds more secrets. Find code '333444'."
+                },
+                '333444': {
+                    component: LandmarkIdentificationPuzzle,
+                    nextClue: "You're a world traveler! The final treasure awaits at the clock tower. The master code is '999999'."
+                },
+                '999999': {
+                    component: () => React.createElement('div', { className: 'math-puzzle' },
+                        React.createElement('div', { className: 'puzzle-content', style: { textAlign: 'center' } },
+                            React.createElement('h1', { className: 'puzzle-title' }, '🏆 Congratulations! 🏆'),
+                            React.createElement('p', { style: { fontSize: '24px', marginTop: '30px' } },
+                                'You\'ve completed the treasure hunt!'
+                            ),
+                            React.createElement('p', { style: { fontSize: '18px', marginTop: '20px' } },
+                                'You are a true puzzle master!'
+                            )
+                        )
+                    ),
+                    nextClue: "You've found the treasure! Congratulations on completing the hunt!"
+                }
+            };
+
+            const handleCodeInput = (index, value) => {
+                if (value.length <= 1 && /^\d*$/.test(value)) {
+                    const newInputs = [...codeInputs];
+                    newInputs[index] = value;
+                    setCodeInputs(newInputs);
+                    setError('');
+
+                    if (value && index < 5) {
+                        inputRefs.current[index + 1]?.focus();
+                    }
+                }
+            };
+
+            const handleKeyDown = (index, e) => {
+                if (e.key === 'Backspace' && !codeInputs[index] && index > 0) {
+                    inputRefs.current[index - 1]?.focus();
+                }
+            };
+
+            const handlePaste = (e) => {
+                e.preventDefault();
+                const pasteData = e.clipboardData.getData('text').slice(0, 6);
+                if (/^\d+$/.test(pasteData)) {
+                    const newInputs = pasteData.split('').concat(Array(6).fill('')).slice(0, 6);
+                    setCodeInputs(newInputs);
+                    inputRefs.current[Math.min(pasteData.length, 5)]?.focus();
+                }
+            };
+
+            const handleUnlock = () => {
+                const code = codeInputs.join('');
+                if (code.length !== 6) {
+                    setError('Please enter all 6 digits');
+                    return;
+                }
+
+                if (puzzles[code]) {
+                    if (solvedCodes.includes(code)) {
+                        setError('You have already solved this puzzle!');
+                        return;
+                    }
+                    setActivePuzzle({ ...puzzles[code], code });
+                    setError('');
+                } else {
+                    setError('Invalid code. Try again!');
+                    setCodeInputs(['', '', '', '', '', '']);
+                    inputRefs.current[0]?.focus();
+                }
+            };
+
+            const handlePuzzleSolve = () => {
+                if (activePuzzle) {
+                    setSolvedCodes(prev => [...prev, activePuzzle.code]);
+                    setLastClue(activePuzzle.nextClue);
+                    setActivePuzzle(null);
+                    setCodeInputs(['', '', '', '', '', '']);
+                    setTimeout(() => {
+                        inputRefs.current[0]?.focus();
+                    }, 100);
+                }
+            };
+
+            const handleDismiss = () => {
+                setActivePuzzle(null);
+            };
+
+            const isCodeComplete = codeInputs.every(input => input !== '');
+
+            return React.createElement('div', { className: 'app-container' },
+                activePuzzle && React.createElement('div', { className: 'puzzle-overlay' },
+                    React.createElement('button', { className: 'dismiss-button', onClick: handleDismiss }, '✕'),
+                    React.createElement(activePuzzle.component, { onSolve: handlePuzzleSolve })
+                ),
+                React.createElement('div', { className: 'code-entry-card' },
+                    React.createElement('h1', { className: 'title' }, '🗝️ Treasure Hunt'),
+                    React.createElement('p', { className: 'subtitle' }, 'Enter the 6-digit code to unlock your puzzle'),
+                    React.createElement('div', { className: 'code-input-container' },
+                        codeInputs.map((value, index) => 
+                            React.createElement('input', {
+                                key: index,
+                                ref: el => inputRefs.current[index] = el,
+                                type: 'text',
+                                inputMode: 'numeric',
+                                className: `code-input ${value ? 'filled' : ''}`,
+                                value: value,
+                                onChange: (e) => handleCodeInput(index, e.target.value),
+                                onKeyDown: (e) => handleKeyDown(index, e),
+                                onPaste: index === 0 ? handlePaste : undefined,
+                                maxLength: '1'
+                            })
+                        )
+                    ),
+                    React.createElement('button', {
+                        className: 'unlock-button',
+                        onClick: handleUnlock,
+                        disabled: !isCodeComplete
+                    }, '🔓 Unlock Puzzle'),
+                    error && React.createElement('div', { className: 'error-message' }, error),
+                    lastClue && React.createElement('div', { className: 'clue-display' },
+                        React.createElement('div', { className: 'clue-title' }, '📍 Your Next Clue'),
+                        React.createElement('div', { className: 'clue-text' }, lastClue)
+                    ),
+                    solvedCodes.length > 0 && React.createElement('div', { className: 'completed-codes' },
+                        `Puzzles solved: ${solvedCodes.length} / ${Object.keys(puzzles).length}`
+                    )
+                )
+            );
+        };
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(TreasureHuntApp));
+    </script>
+</body>
+</html>
