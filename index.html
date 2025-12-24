@@ -681,7 +681,7 @@
                 onSolve: onSolve
             });
         };
-
+        
         const LandmarkIdentificationPuzzle = ({ onSolve }) => {
             const puzzleData = [
                 {
@@ -707,6 +707,27 @@
                 onSolve: onSolve
             });
         };
+         const Varsh = ({ onSolve }) => {
+            const puzzleData = [
+                {
+                    image: '/peacock.jpeg', // Taj Mahal
+                    options: ['Murugan', 'Ganapathy', 'Dhurga', 'Vishnu'],
+                    correctAnswer: 'Murugan'
+                },
+                  {
+                    image: '/moushik.png', // Taj Mahal
+                    options: ['Murugan', 'Ganapathy', 'Dhurga', 'Vishnu'],
+                    correctAnswer: 'Ganapathy'
+                }
+               
+            ];
+            
+            return React.createElement(ImagePuzzle, {
+                puzzleData: puzzleData,
+                question: "Which god is this vahanam for?",
+                onSolve: onSolve
+            });
+        };
 
         // Main App Component
         const TreasureHuntApp = () => {
@@ -719,26 +740,44 @@
 
             // Puzzle configuration with new image puzzles
             const puzzles = {
+               
                 '123456': {
                     component: MathPuzzle,
                     nextClue: "Excellent! Your next destination awaits at the old oak tree. Look for the marking that shows '789012'."
                 },
-                '789012': {
-                    component: WordPuzzle,
-                    nextClue: "Shadows lead the way! Head to the fountain and search for code '345678' beneath the waters."
+                 '191312':{
+                    component: Varsh,
+                    nextClue: "Where tasty snacks are set in place, Your team's bright color you will trace. Tejaswi, choose one tied nearby, Inside it hides the clue—give it a try!",
                 },
-                '345678': {
-                    component: LogicPuzzle,
-                    nextClue: "Time is of the essence! Check the visitor center for code '111222'."
+                   '011006':{
+                    component: Varsh,
+                    nextClue: "Out where the cars are parked in a line, A bright pink bird stands tall and fine. On one long leg it likes to pose, Look right there—your next clue shows!",
                 },
-                '111222': {
-                    component: AnimalIdentificationPuzzle,
-                    nextClue: "Great observation skills! The wildlife exhibit holds more secrets. Find code '333444'."
+
+                     '241225':{
+                    component: Varsh,
+                    nextClue: "Where plates and snacks are set just right, A red-and-white hat rests in sight. On the table where meals begin, Check it closely—the clue’s tucked in!",
                 },
-                '333444': {
-                    component: LandmarkIdentificationPuzzle,
-                    nextClue: "You're a world traveler! The final treasure awaits at the clock tower. The master code is '999999'."
+                       '879925':{
+                    component: Varsh,
+                    nextClue: "At last you’re close, the end is near, The treasure waits—so gather here! A jar of green holds a shining key, But hands stay dry—think cleverly. Near where water’s poured so clean and clear, On the counter close, the prize is here. Free the key without a splash or spill, Unlock the treasure—you’ve won by skill! ",
                 },
+                // '789012': {
+                //     component: WordPuzzle,
+                //     nextClue: "Shadows lead the way! Head to the fountain and search for code '345678' beneath the waters."
+                // },
+                // '345678': {
+                //     component: LogicPuzzle,
+                //     nextClue: "Time is of the essence! Check the visitor center for code '111222'."
+                // },
+                // '111222': {
+                //     component: AnimalIdentificationPuzzle,
+                //     nextClue: "Great observation skills! The wildlife exhibit holds more secrets. Find code '333444'."
+                // },
+                // '333444': {
+                //     component: LandmarkIdentificationPuzzle,
+                //     nextClue: "You're a world traveler! The final treasure awaits at the clock tower. The master code is '999999'."
+                // },
                 '999999': {
                     component: () => React.createElement('div', { className: 'math-puzzle' },
                         React.createElement('div', { className: 'puzzle-content', style: { textAlign: 'center' } },
@@ -792,10 +831,10 @@
                 }
 
                 if (puzzles[code]) {
-                    if (solvedCodes.includes(code)) {
-                        setError('You have already solved this puzzle!');
-                        return;
-                    }
+                    // if (solvedCodes.includes(code)) {
+                    //     setError('You have already solved this puzzle!');
+                    //     return;
+                    // }
                     setActivePuzzle({ ...puzzles[code], code });
                     setError('');
                 } else {
