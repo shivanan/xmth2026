@@ -17,6 +17,16 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
+        .puzzle-text {
+            background-color: #d84848;
+    color: #ffdbdb;
+    padding: 30px;
+    text-align: center;
+    font-size: 1.5em;
+    margin: 20px;
+    border-radius: 19px;
+    font-weight: bold;
+        }
         
         .app-container {
             min-height: 100vh;
@@ -521,6 +531,88 @@
                 )
             );
         };
+         const TextPuzzle = ({ 
+            puzzleData = [], // Array of {image, options, correctAnswer}
+            question = "What does this image represent?",
+            onSolve 
+        }) => {
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [incorrectAttempts, setIncorrectAttempts] = useState({});
+            const [solved, setSolved] = useState(false);
+            const [totalAttempts, setTotalAttempts] = useState(0);
+            
+            // Current puzzle item
+            const currentPuzzle = puzzleData[currentIndex];
+            
+            if (!currentPuzzle) {
+                return React.createElement('div', { className: 'image-puzzle' },
+                    React.createElement('div', { className: 'image-puzzle-content' },
+                        React.createElement('p', null, 'No puzzle data provided')
+                    )
+                );
+            }
+            
+            const handleOptionClick = (option) => {
+                if (solved) return;
+                
+                setTotalAttempts(prev => prev + 1);
+                
+                if (option === currentPuzzle.correctAnswer) {
+                    setSolved(true);
+                    setTimeout(() => onSolve(), 2000);
+                } else {
+                    // Track incorrect attempts for this specific puzzle
+                    const puzzleKey = `puzzle_${currentIndex}`;
+                    setIncorrectAttempts(prev => ({
+                        ...prev,
+                        [puzzleKey]: [...(prev[puzzleKey] || []), option]
+                    }));
+                    
+                    // Move to next image after a delay
+                    setTimeout(() => {
+                        setCurrentIndex((prev) => (prev + 1) % puzzleData.length);
+                    }, 1500);
+                }
+            };
+            
+            // Get incorrect attempts for current puzzle
+            const currentIncorrect = incorrectAttempts[`puzzle_${currentIndex}`] || [];
+            
+            return React.createElement('div', { className: 'image-puzzle' },
+                React.createElement('div', { className: 'image-puzzle-content' },
+                    React.createElement('h2', { className: 'image-puzzle-title' }, question),
+                    React.createElement('div', { className: 'image-progress' },
+                        `Item ${currentIndex + 1} of ${puzzleData.length}`
+                    ),
+                    React.createElement('div', { className: 'text-image-container' },
+                        React.createElement('div', { 
+                            className: 'puzzle-text',
+                            alt: currentPuzzle.text,
+                        },currentPuzzle.text)
+                    ),
+                    React.createElement('div', { className: 'options-grid' },
+                        currentPuzzle.options.map(option => 
+                            React.createElement('button', {
+                                key: option,
+                                className: `option-button ${
+                                    currentIncorrect.includes(option) ? 'incorrect' : ''
+                                } ${
+                                    solved && option === currentPuzzle.correctAnswer ? 'correct' : ''
+                                }`,
+                                onClick: () => handleOptionClick(option),
+                                disabled: solved || currentIncorrect.includes(option)
+                            }, option)
+                        )
+                    ),
+                    solved && React.createElement('div', { className: 'image-feedback success' },
+                        '🎉 Correct! Well done!'
+                    ),
+                    totalAttempts > 0 && !solved && React.createElement('div', { className: 'attempts-counter' },
+                        `Total attempts: ${totalAttempts}`
+                    )
+                )
+            );
+        };
 
         // Example Math Puzzle Component
         const MathPuzzle = ({ onSolve }) => {
@@ -614,6 +706,53 @@
             );
         };
 
+        const Nanthanar = ({ onSolve }) => {
+            const [answer, setAnswer] = useState('');
+            const [feedback, setFeedback] = useState('');
+            
+            const checkAnswer = () => {
+                if (
+                    (answer.trim().toLowerCase() === 'nanthanar')||
+                    (answer.trim().toLowerCase() === 'nandanar')||
+                    (answer.trim().toLowerCase() === 'nandhanar')
+             ) {
+                    setFeedback('correct');
+                    setTimeout(() => onSolve(), 1500);
+                } else {
+                    setFeedback('incorrect');
+                    setTimeout(() => setFeedback(''), 2000);
+                }
+            };
+            
+            return React.createElement('div', { className: 'word-puzzle' },
+                React.createElement('div', { className: 'puzzle-content' },
+                    React.createElement('h2', { className: 'puzzle-title' }, 'Who am I?'),
+                    React.createElement('p', { style: { fontSize: '20px', marginBottom: '20px', textAlign: 'center', lineHeight: '1.8' } },
+                        'I was a Nayanar devotee of Lord Shiva.',
+                        React.createElement('br'),
+                        'I wanted to see Shiva at the Chidambaram temple, but I stood outside and prayed.',
+                        React.createElement('br'),
+                        'Lord Shiva called me inside because of my devotion.',
+                        React.createElement('br'),
+                        'Who am I?',
+                       
+                    ),
+                    React.createElement('input', {
+                        type: 'text',
+                        className: 'puzzle-input',
+                        placeholder: 'Enter your answer...',
+                        value: answer,
+                        onChange: (e) => setAnswer(e.target.value),
+                        onKeyPress: (e) => e.key === 'Enter' && checkAnswer()
+                    }),
+                    React.createElement('button', { className: 'puzzle-submit', onClick: checkAnswer }, 'Submit Answer'),
+                    feedback && React.createElement('div', { className: `puzzle-feedback ${feedback}` },
+                        feedback === 'correct' ? '✓ Brilliant deduction!' : '✗ Not quite right...'
+                    )
+                )
+            );
+        };
+
         // Example Logic Puzzle Component  
         const LogicPuzzle = ({ onSolve }) => {
             const [answer, setAnswer] = useState('');
@@ -643,6 +782,48 @@
                         type: 'text',
                         className: 'puzzle-input',
                         placeholder: 'Enter the day...',
+                        value: answer,
+                        onChange: (e) => setAnswer(e.target.value),
+                        onKeyPress: (e) => e.key === 'Enter' && checkAnswer()
+                    }),
+                    React.createElement('button', { className: 'puzzle-submit', onClick: checkAnswer }, 'Submit Answer'),
+                    feedback && React.createElement('div', { className: `puzzle-feedback ${feedback}` },
+                        feedback === 'correct' ? '✓ Excellent logic!' : '✗ Think about it again...'
+                    )
+                )
+            );
+        };
+        const LogicPuzzle2 = ({ onSolve }) => {
+            const [answer, setAnswer] = useState('');
+            const [feedback, setFeedback] = useState('');
+            
+            const checkAnswer = () => {
+                if (answer.toLowerCase() === 'chithu') {
+                    setFeedback('correct');
+                    setTimeout(() => onSolve(), 1500);
+                } else {
+                    setFeedback('incorrect');
+                    setTimeout(() => setFeedback(''), 2000);
+                }
+            };
+            
+            return React.createElement('div', { className: 'riddle-puzzle' },
+                React.createElement('div', { className: 'puzzle-content' },
+                    React.createElement('h2', { className: 'puzzle-title' }, 'Riddle Me This'),
+                    React.createElement('p', { style: { fontSize: '20px', marginBottom: '20px', textAlign: 'center', lineHeight: '1.8' } },
+                        'Four friends—Asha, Bala, Chithu, Dev—each went to one place: Library, Park, Temple, Café.',
+                        React.createElement('br'),
+                        'Bala went to the Park, and Asha did not go to the Temple.',
+                        React.createElement('br'),
+                        'Dev did not go to the Temple or the Park.',
+                        React.createElement('br'),
+                        'Who went to the Temple?',
+
+                    ),
+                    React.createElement('input', {
+                        type: 'text',
+                        className: 'puzzle-input',
+                        placeholder: 'Enter the name...',
                         value: answer,
                         onChange: (e) => setAnswer(e.target.value),
                         onKeyPress: (e) => e.key === 'Enter' && checkAnswer()
@@ -707,6 +888,7 @@
                 onSolve: onSolve
             });
         };
+
          const Varsh = ({ onSolve }) => {
             const puzzleData = [
                 {
@@ -725,6 +907,162 @@
             return React.createElement(ImagePuzzle, {
                 puzzleData: puzzleData,
                 question: "Which god is this vahanam for?",
+                onSolve: onSolve
+            });
+        };
+ const Kaminaya = ({ onSolve }) => {
+            const puzzleData = [
+                {
+                    image: '/mothaham.jpeg', // Taj Mahal
+                    options: ['Murugan', 'Ganapathy', 'Dhurga', 'Vishnu'],
+                    correctAnswer: 'Ganapathy'
+                }
+               
+            ];
+            
+            return React.createElement(ImagePuzzle, {
+                puzzleData: puzzleData,
+                question: "Which god likes to eat this the most?",
+                onSolve: onSolve
+            });
+        };
+ const Poorani = ({ onSolve }) => {
+            const puzzleData = [
+                {
+                    image: '/mothaham.jpeg', // Taj Mahal
+                    options: ['Murugan', 'Ganapathy', 'Dhurga', 'Vishnu'],
+                    correctAnswer: 'Ganapathy'
+                }
+               
+            ];
+            
+            return React.createElement(ImagePuzzle, {
+                puzzleData: puzzleData,
+                question: "Which god likes to eat this the most?",
+                onSolve: onSolve
+            });
+        };
+        const RagaPuzzle = ({onSolve}) => {
+            const puzzleData = [
+                {
+                    "correctAnswer": "Hamsadwani",
+                    "options":[
+                      "Bhairavi",
+                      "Kalyani",
+                      "Hamsadwani",
+                      "Shankarabharanam"
+                ],
+                "text":"Vathapi Ganapathim",
+                },
+                  {
+                    "correctAnswer": "Nattai",
+                    "options":[
+                      "Bhairavi",
+                      "Nattai",
+                      "Hamsadwani",
+                      "Hindolam"
+                ],
+                "text":"Maha Ganapathim",
+                },
+                  {
+                    "correctAnswer": "Mohanam",
+                    "options":[
+                      "Mohanam",
+                      "Nattai",
+                      "Kalyani",
+                      "Hindolam"
+                ],
+                "text":"Ninnukori",
+                }
+            ];
+             return React.createElement(TextPuzzle, {
+                puzzleData: puzzleData,
+                question: "Identify the raga for this song",
+                onSolve: onSolve
+            });
+        }
+         const FlagPuzzle = ({ onSolve }) => {
+            const puzzleData = [
+
+             {
+    "correctAnswer": "Germany",
+    "options":[
+      "Belgium",
+      "Germany",
+      "Austria",
+      "Switzerland"
+    ],
+    "image": "https://flagcdn.com/w320/de.png"
+  },
+  {
+    "correctAnswer": "France",
+    "options":[
+      "Italy",
+      "Netherlands",
+      "France",
+      "Portugal"
+    ],
+    "image": "https://flagcdn.com/w320/fr.png"
+  },
+               
+  {
+    "correctAnswer": "United Kingdom",
+    "options":[
+      "United States",
+      "United Kingdom",
+      "Canada",
+      "Australia"
+    ],
+    "image": "https://flagcdn.com/w320/gb.png"
+  },
+  {
+    "correctAnswer": "Canada",
+    "options":[
+        "Australia",
+        "New Zealand",
+        "Canada",
+      "Ireland"
+    ],
+    "image": "https://flagcdn.com/w320/ca.png"
+  },
+  {
+    "correctAnswer": "Australia",
+    "options":[
+        "South Africa",
+        "Australia",
+      "India",
+      "United Kingdom"
+    ],
+    "image": "https://flagcdn.com/w320/au.png"
+  },
+ 
+ 
+  {
+    "correctAnswer": "Japan",
+    "options":[
+      "China",
+      "South Korea",
+      "Japan",
+      "Vietnam"
+    ],
+    "image": "https://flagcdn.com/w320/jp.png"
+  },
+  {
+    "correctAnswer": "China",
+    "options":[
+      "China",
+      "Thailand",
+      "Philippines",
+      "Malaysia"
+    ],
+    "image": "https://flagcdn.com/w320/cn.png"
+  }
+               
+            ];
+            
+            return React.createElement(ImagePuzzle, {
+                puzzleData: puzzleData,
+                question: "Identify the country this flag belongs to",
                 onSolve: onSolve
             });
         };
@@ -750,34 +1088,38 @@
                     nextClue: "Where tasty snacks are set in place, Your team's bright color you will trace. Tejaswi, choose one tied nearby, Inside it hides the clue—give it a try!",
                 },
                    '011006':{
-                    component: Varsh,
+                    component: Nanthanar,
                     nextClue: "Out where the cars are parked in a line, A bright pink bird stands tall and fine. On one long leg it likes to pose, Look right there—your next clue shows!",
                 },
 
                      '241225':{
-                    component: Varsh,
+                    component: LogicPuzzle,
                     nextClue: "Where plates and snacks are set just right, A red-and-white hat rests in sight. On the table where meals begin, Check it closely—the clue’s tucked in!",
                 },
                        '879925':{
-                    component: Varsh,
+                    component: RagaPuzzle,
                     nextClue: "At last you’re close, the end is near, The treasure waits—so gather here! A jar of green holds a shining key, But hands stay dry—think cleverly. Near where water’s poured so clean and clear, On the counter close, the prize is here. Free the key without a splash or spill, Unlock the treasure—you’ve won by skill! ",
                 },
-                // '789012': {
-                //     component: WordPuzzle,
-                //     nextClue: "Shadows lead the way! Head to the fountain and search for code '345678' beneath the waters."
-                // },
-                // '345678': {
-                //     component: LogicPuzzle,
-                //     nextClue: "Time is of the essence! Check the visitor center for code '111222'."
-                // },
-                // '111222': {
-                //     component: AnimalIdentificationPuzzle,
-                //     nextClue: "Great observation skills! The wildlife exhibit holds more secrets. Find code '333444'."
-                // },
-                // '333444': {
-                //     component: LandmarkIdentificationPuzzle,
-                //     nextClue: "You're a world traveler! The final treasure awaits at the clock tower. The master code is '999999'."
-                // },
+                        '832567':{
+                    component: Kaminaya,
+                    nextClue: "Where magic spells and wizards grin, A famous prince with blood half in. On the shelf where that book stands tall, Look right beside it—that’s not all!"
+                 },
+                '489765': {
+                    component: LandmarkIdentificationPuzzle,
+                    nextClue: "Near shining strings that love to sing, Beside a pot of brass and gleam. Where music rests in wooden grace, That little pot hides the clue’s place!",
+                },
+                '564209': {
+                    component: LogicPuzzle2,
+                    nextClue: "Where tasty snacks are set in place, Your team’s bright color you will trace. Harshini, choose one tied nearby, Inside it hides the clue—give it a try!",
+                },
+                '097425': {
+                    component: FlagPuzzle,
+                    nextClue: "Step outside where fresh air flows, And green friends grow in pots and rows. Behind a table with two chairs there, Near the plants—your next clue’s where!",
+                },
+                '333444': {
+                    component: LandmarkIdentificationPuzzle,
+                    nextClue: "You're a world traveler! The final treasure awaits at the clock tower. The master code is '999999'."
+                },
                 '999999': {
                     component: () => React.createElement('div', { className: 'math-puzzle' },
                         React.createElement('div', { className: 'puzzle-content', style: { textAlign: 'center' } },
